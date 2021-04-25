@@ -81,8 +81,6 @@ class SudokuSolver():
                 
             else: #If fail then take a step back in guesses
                 print("Step back") if debug_print else None
-                #A = np.array(As[-1]) 
-                #As.pop(-1) #Go back to A before last guess
                 
                 for j in range(len(guess_rest_possibilities)):
                     tmp_rest_poss = guess_rest_possibilities[-1]
@@ -90,7 +88,6 @@ class SudokuSolver():
                         guess_rest_possibilities.pop(-1)
                         guess_idxs.pop(-1)
                         As.pop(-1)
-                        A = np.array(As[-1]) 
                     else:
                         A = np.array(As[-1]) 
                         guess_idx = guess_idxs[-1]
@@ -102,7 +99,7 @@ class SudokuSolver():
             A[guess_idx // 9, guess_idx % 9] = guess
             
             #Run singles
-            possibilities, n_possibilities, success = run_singles(A, False)
+            possibilities, n_possibilities, success = run_singles(A, debug_print = False)
         
         if np.sum(A) == 405:
             print("Success") if debug_print else None
