@@ -2,7 +2,7 @@
 """
 Created on Sat Apr 24 20:51:04 2021
 
-@author: mrgna
+@author: Magnus Frandsen
 """
 
 import numpy as np
