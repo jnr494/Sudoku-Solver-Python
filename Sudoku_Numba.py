@@ -6,7 +6,49 @@ Created on Sat Apr 24 20:51:04 2021
 """
 
 import numpy as np
+import numba as nb
 import time
+
+@nb.njit(parallel=False)
+def nb_unique(arr):
+    return np.unique(arr)
+
+@nb.njit(parallel=False)
+def nb_isin1to9(arr):
+    len_arr = len(arr)
+    
+    if arr[0] == 0:
+        len_adjust = 1
+        count0 = 1
+    else:
+        len_adjust = 0
+        count0 = 0
+        
+    new_range = np.zeros((9 - len_arr + len_adjust), dtype = np.int32)
+     
+    count1 = 0
+    
+    for i in range(1,10):
+        if i != arr[count0]:
+            new_range[count1] = i
+            count1 += 1
+        else:
+            count0 = min(count0 + 1, len_arr - 1)
+            
+    return new_range
+
+
+@nb.njit(parallel=False)
+def nb_get_row_col_cube(A, i, j):
+    row = A[i,:]
+    col = A[:,j]
+    
+    cube_row = i // 3
+    cube_col = j // 3
+    cube = A[3*cube_row:3*(cube_row+1),3*cube_col:3*(cube_col+1)]
+    
+    row_col_cube = np.append(np.append(row,col),cube)
+    return row_col_cube
 
 def run_singles(A, debug_print = False):
     #Check for singles
@@ -26,23 +68,14 @@ def run_singles(A, debug_print = False):
                     possibilities.append(0)
                     n_possibilities.append(10)
                     continue
+                  
+                row_col_cube2 = nb_get_row_col_cube(A,i,j)
+                row_col_cube2 = nb_unique(row_col_cube2)
+                tmp_possibilities2 = nb_isin1to9(row_col_cube2)
+                tmp_n_possibilities2 = len(tmp_possibilities2)  
                 
-                row = A[i,:]
-                col = A[:,j]
-                
-                cube_row = i // 3
-                cube_col = j // 3
-                cube = A[3*cube_row:3*(cube_row+1),3*cube_col:3*(cube_col+1)].flatten()
-                
-                row_col_cube = np.array([row, col, cube]).reshape((len(row)*3))
-                row_col_cube = np.unique(row_col_cube)
-                
-                range1to9 = np.arange(1,10)
-                tmp_possibilities = range1to9[np.isin(range1to9,row_col_cube, assume_unique=True, invert = True)]
-                tmp_n_possibilities = len(tmp_possibilities)     
-                
-                possibilities.append(tmp_possibilities)
-                n_possibilities.append(tmp_n_possibilities)
+                tmp_possibilities = tmp_possibilities2
+                tmp_n_possibilities = tmp_n_possibilities2
                 
                 if tmp_n_possibilities == 1:
                     A[i,j] = tmp_possibilities[0]
@@ -51,6 +84,9 @@ def run_singles(A, debug_print = False):
                 elif tmp_n_possibilities == 0:
                     return possibilities, n_possibilities, False
                 
+                possibilities.append(tmp_possibilities)
+                n_possibilities.append(tmp_n_possibilities)
+                
     return possibilities, n_possibilities, True
 
 class SudokuSolver():
@@ -58,6 +94,7 @@ class SudokuSolver():
         self.start_grid = start_grid
     
     def find_solution(self, debug_print = False):
+        guess, guess_idx = 0,0 
         A = np.array(self.start_grid) #Current grid
         
         #First run
@@ -68,7 +105,7 @@ class SudokuSolver():
         guess_rest_possibilities = []
         As = []
                 
-        for i in range(100000): #Change range to increase "max_iter" (10000 should be enough for most puzzles)
+        for i in range(10000): #Change range to increase "max_iter" (10000 should be enough for most puzzles)
             if np.sum(A) == 405:
                 break
             
