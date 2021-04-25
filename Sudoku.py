@@ -55,7 +55,7 @@ class SudokuSolver():
         self.start_grid = start_grid
     
     def find_solution(self, debug_print = False):
-        A = np.array(self.start_grid)
+        A = np.array(self.start_grid) #Current grid
         
         #First run
         possibilities, n_possibilities, success = run_singles(A)
@@ -84,11 +84,12 @@ class SudokuSolver():
                 
                 for j in range(len(guess_rest_possibilities)):
                     tmp_rest_poss = guess_rest_possibilities[-1]
-                    if len(tmp_rest_poss) == 0:
+                    if len(tmp_rest_poss) == 0: #Take another step back in guesses
+                        print("Step back") if debug_print else None
                         guess_rest_possibilities.pop(-1)
                         guess_idxs.pop(-1)
                         As.pop(-1)
-                    else:
+                    else: #Make another guess and revert to older grid
                         A = np.array(As[-1]) 
                         guess_idx = guess_idxs[-1]
                         guess = tmp_rest_poss.pop(-1)
@@ -197,7 +198,7 @@ def main():
     
     for i, sudoku in enumerate(sudokus):
         solver = SudokuSolver(sudoku)
-        solution = solver.find_solution(debug_print = False)
+        solution = solver.find_solution(debug_print = True)
         print("Solution to {}. puzzle:\n".format(i), solution)
 
 if __name__ == '__main__':
