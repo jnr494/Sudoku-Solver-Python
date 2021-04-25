@@ -65,7 +65,7 @@ class SudokuSolver():
         guess_rest_possibilities = []
         As = []
                 
-        for i in range(10000):
+        for i in range(100000): #Change range to increase "max_iter" (10000 should be enough for most puzzles)
             if np.sum(A) == 405:
                 break
             
@@ -198,7 +198,7 @@ def main():
     
     for i, sudoku in enumerate(sudokus):
         solver = SudokuSolver(sudoku)
-        solution = solver.find_solution(debug_print = True)
+        solution = solver.find_solution(debug_print = False)
         print("Solution to {}. puzzle:\n".format(i), solution)
 
 if __name__ == '__main__':
