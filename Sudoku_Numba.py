@@ -7,7 +7,12 @@ Created on Sat Apr 24 20:51:04 2021
 
 import numpy as np
 import numba as nb
+from numba.typed import List
 import time
+
+@nb.njit(parallel = False)
+def nb_sum(A):
+    return np.sum(A)
 
 @nb.njit(parallel=False)
 def nb_unique(arr):
@@ -24,7 +29,7 @@ def nb_isin1to9(arr):
         len_adjust = 0
         count0 = 0
         
-    new_range = np.zeros((9 - len_arr + len_adjust), dtype = np.int32)
+    new_range = np.zeros((9 - len_arr + len_adjust), dtype = np.int64)
      
     count1 = 0
     
@@ -37,7 +42,6 @@ def nb_isin1to9(arr):
             
     return new_range
 
-
 @nb.njit(parallel=False)
 def nb_get_row_col_cube(A, i, j):
     row = A[i,:]
@@ -49,6 +53,14 @@ def nb_get_row_col_cube(A, i, j):
     
     row_col_cube = np.append(np.append(row,col),cube)
     return row_col_cube
+
+@nb.njit(parallel=False)
+def nb_get_possibilities(A, i, j):
+    row_col_cube = nb_get_row_col_cube(A,i,j)
+    row_col_cube = nb_unique(row_col_cube)
+    tmp_possibilities = nb_isin1to9(row_col_cube)
+    tmp_n_possibilities = len(tmp_possibilities)  
+    return tmp_possibilities, tmp_n_possibilities
 
 def run_singles(A, debug_print = False):
     #Check for singles
@@ -69,14 +81,8 @@ def run_singles(A, debug_print = False):
                     n_possibilities.append(10)
                     continue
                   
-                row_col_cube2 = nb_get_row_col_cube(A,i,j)
-                row_col_cube2 = nb_unique(row_col_cube2)
-                tmp_possibilities2 = nb_isin1to9(row_col_cube2)
-                tmp_n_possibilities2 = len(tmp_possibilities2)  
-                
-                tmp_possibilities = tmp_possibilities2
-                tmp_n_possibilities = tmp_n_possibilities2
-                
+                tmp_possibilities, tmp_n_possibilities = nb_get_possibilities(A, i, j)
+
                 if tmp_n_possibilities == 1:
                     A[i,j] = tmp_possibilities[0]
                     print("Insert", i,j, tmp_possibilities[0]) if debug_print else None
@@ -99,14 +105,13 @@ class SudokuSolver():
         
         #First run
         possibilities, n_possibilities, success = run_singles(A)
-                
         #Lists for saving guess information
         guess_idxs = []
         guess_rest_possibilities = []
         As = []
                 
-        for i in range(10000): #Change range to increase "max_iter" (10000 should be enough for most puzzles)
-            if np.sum(A) == 405:
+        for i in range(50000): #Change range to increase "max_iter" (10000 should be enough for most puzzles)
+            if nb_sum(A) == 405:
                 break
             
             if success is True:
@@ -141,8 +146,8 @@ class SudokuSolver():
             
             #Run singles
             possibilities, n_possibilities, success = run_singles(A, debug_print = False)
-        
-        if np.sum(A) == 405:
+            
+        if nb_sum(A) == 405:
             print("Success") if debug_print else None
             self.solved_grid = A
             return A
