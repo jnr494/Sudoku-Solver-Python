@@ -3,5 +3,5 @@
 
 Requirements:<br>
 numpy<br>
-numba (only for Sudoku_Numba.py, which delivers 5-10x speed boost)
+numba (only for Sudoku_Numba.py, which delivers 10-20x speed boost)
 
