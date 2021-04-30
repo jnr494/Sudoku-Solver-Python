@@ -102,7 +102,7 @@ class SudokuSolver():
                 As.append(np.array(A)) #Save A before making a guess
                 guess_idx = np.argmin(n_possibilities) #Best guess idx
                 tmp_possibilities = list(possibilities[guess_idx]) #Possibilities at guess_idx
-                guess = tmp_possibilities.pop(0) #Guess
+                guess = tmp_possibilities.pop() #Guess
                 
                 #Save guess idx and guess
                 guess_idxs.append(guess_idx)
@@ -115,13 +115,13 @@ class SudokuSolver():
                     tmp_rest_poss = guess_rest_possibilities[-1]
                     if len(tmp_rest_poss) == 0: #Take another step back in guesses
                         print("Step back") if debug_print else None
-                        guess_rest_possibilities.pop(-1)
-                        guess_idxs.pop(-1)
-                        As.pop(-1)
+                        guess_rest_possibilities.pop()
+                        guess_idxs.pop()
+                        As.pop()
                     else: #Make another guess and revert to older grid
                         A = np.array(As[-1]) 
                         guess_idx = guess_idxs[-1]
-                        guess = tmp_rest_poss.pop(-1)
+                        guess = tmp_rest_poss.pop()
                         break
                                       
             #Make guess
