@@ -7,40 +7,11 @@ Created on Sat Apr 24 20:51:04 2021
 
 import numpy as np
 import numba as nb
-from numba.typed import List
 import time
 
 @nb.njit(parallel = False)
 def nb_sum(A):
     return np.sum(A)
-
-@nb.njit(parallel=False)
-def nb_unique(arr):
-    return np.unique(arr)
-
-@nb.njit(parallel=False)
-def nb_isin1to9(arr):
-    len_arr = len(arr)
-    
-    if arr[0] == 0:
-        len_adjust = 1
-        count0 = 1
-    else:
-        len_adjust = 0
-        count0 = 0
-        
-    new_range = np.zeros((9 - len_arr + len_adjust), dtype = np.int64)
-     
-    count1 = 0
-    
-    for i in range(1,10):
-        if i != arr[count0]:
-            new_range[count1] = i
-            count1 += 1
-        else:
-            count0 = min(count0 + 1, len_arr - 1)
-            
-    return new_range
 
 @nb.njit(parallel=False)
 def nb_get_row_col_cube(A, i, j):
@@ -57,10 +28,23 @@ def nb_get_row_col_cube(A, i, j):
 @nb.njit(parallel=False)
 def nb_get_possibilities(A, i, j):
     row_col_cube = nb_get_row_col_cube(A,i,j)
-    row_col_cube = nb_unique(row_col_cube)
-    tmp_possibilities = nb_isin1to9(row_col_cube)
-    tmp_n_possibilities = len(tmp_possibilities)  
-    return tmp_possibilities, tmp_n_possibilities
+    
+    pre_not_possibilities = np.zeros(10, dtype = np.int64)
+    for i in range(len(row_col_cube)):
+        tmp_number = row_col_cube[i]
+        pre_not_possibilities[tmp_number] = tmp_number
+     
+    n_possibilities = 9 - np.count_nonzero(pre_not_possibilities)
+    
+    possibilities = np.zeros(n_possibilities, dtype = np.int64)
+    count = 0
+    for i in range(1,10):
+        tmp_number = pre_not_possibilities[i]
+        if tmp_number == 0:
+            possibilities[count] = i
+            count += 1
+    
+    return possibilities, n_possibilities
 
 def run_singles(A, debug_print = False):
     #Check for singles
